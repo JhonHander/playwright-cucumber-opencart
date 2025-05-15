@@ -1,0 +1,47 @@
+{
+  "name": "bdd-test",
+  "version": "1.0.0",
+  "description": "BDD tests using Playwright and Cucumber for OpenCart",
+  "main": "index.js",
+  "scripts": {
+    "test": "cucumber-js",
+    "test:headed": "cucumber-js --tags @smoke",
+    "test:all": "cucumber-js --tags @all",
+    "test:product-search": "cucumber-js src/features/01-product-search.feature",
+    "test:filtering": "cucumber-js src/features/02-product-filtering-sorting.feature",
+    "test:cart": "cucumber-js src/features/03-shopping-cart.feature",
+    "test:comparison": "cucumber-js src/features/04-product-comparison.feature",
+    "test:checkout": "cucumber-js src/features/05-checkout-process.feature",
+    "test:registration": "cucumber-js src/features/06-user-registration.feature",
+    "test:e2e": "cucumber-js src/features/07-end-to-end-shopping.feature",
+    "test:e2e:headed": "cucumber-js src/features/07-end-to-end-shopping.feature --profile headed",
+    "test:parallel": "cucumber-js --parallel 4",
+    "test:retry": "cucumber-js --retry 2",
+    "dry:test": "cucumber-js --profile dryrun",
+    "failed:test": "cucumber-js @rerun.txt --profile rerun",
+    "report:generate": "node src/utils/report-generator.js",
+    "clean:reports": "rimraf src/reports/* && mkdir -p src/reports/screenshots src/reports/videos",
+    "pretest": "npm run clean:reports"
+  },
+  "keywords": [
+    "BDD",
+    "Playwright",
+    "Cucumber",
+    "Gherkin",
+    "Testing"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@cucumber/cucumber": "^11.3.0",
+    "@playwright/test": "^1.52.0",
+    "chai": "^5.2.0",
+    "cucumber-html-reporter": "^7.2.0",
+    "dotenv": "^16.5.0",
+    "multiple-cucumber-html-reporter": "^3.9.2"
+  },
+  "devDependencies": {
+    "rimraf": "^6.0.1"
+  }
+}
