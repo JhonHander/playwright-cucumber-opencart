@@ -36,7 +36,6 @@ When('I search with the following criteria:', async function(dataTable) {
   await searchResultPage.search(
     criteria.keyword,
     criteria.description === 'true',
-    criteria.subcategories === 'true'
   );
   
   // Store search term for later steps

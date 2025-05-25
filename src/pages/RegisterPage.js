@@ -24,7 +24,7 @@ class RegisterPage extends BasePage {
     this.telephoneError = '#input-telephone + .text-danger';
     this.passwordError = '#input-password + .text-danger';
     this.confirmPasswordError = '#input-confirm + .text-danger';
-    this.successMessage = '#content h1';
+    this.successMessage = '#content > p:first-child';
   }
 
   /**
@@ -73,9 +73,15 @@ class RegisterPage extends BasePage {
    * @returns {Promise<boolean>}
    */
   async isRegistrationSuccessful() {
-    await this.waitForElement(this.successMessage);
-    const message = await this.getText(this.successMessage);
-    return message.includes('Your Account Has Been Created');
+    try {
+      await this.waitForElement(this.successMessage, 15000);
+      const message = await this.getText(this.successMessage);
+      console.log(`Registration success page message: "${message}"`);
+      return message.toLowerCase().startsWith('congratulations! your new account has been successfully created!');
+    } catch (error) {
+      console.error(`Error in isRegistrationSuccessful: ${error.message}. Current URL: ${this.page.url()}`);
+      return false;
+    }
   }
 
   /**

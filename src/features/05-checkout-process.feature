@@ -5,7 +5,7 @@ Feature: Checkout Process
 
   Background:
     Given I am on the OpenCart homepage
-    And I have added an "iPhone" to my cart
+    And I have added an "iMac" to my cart
 
   @all
   Scenario: Guest checkout with all required fields

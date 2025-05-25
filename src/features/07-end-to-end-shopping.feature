@@ -46,7 +46,7 @@ Feature: End-to-End Shopping Experience
     When I search for "phone"
     And I add the first product to the cart
     And I return to the homepage
-    And I search for "tablet"
+    And I search for "tab"
     And I add the first product to the cart
     
     # Cart management

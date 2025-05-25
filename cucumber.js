@@ -7,6 +7,7 @@ const RETRIES = process.env.RETRIES || 1;
 
 module.exports = {
   default: {
+    paths: ['src/features/**/*.feature'],
     requireModule: ['ts-node/register'],
     require: ['src/step-definitions/**/*.js'],
     format: [
@@ -15,12 +16,12 @@ module.exports = {
       'json:src/reports/cucumber-report.json'
     ],
     formatOptions: { snippetInterface: 'async-await' },
-    publishQuiet: true,
     parallel: parseInt(PARALLEL),
     retry: parseInt(RETRIES)
   },
   
   headed: {
+    paths: ['src/features/**/*.feature'],
     requireModule: ['ts-node/register'],
     require: ['src/step-definitions/**/*.js'],
     format: [
@@ -29,7 +30,6 @@ module.exports = {
       'json:src/reports/cucumber-report.json'
     ],
     formatOptions: { snippetInterface: 'async-await' },
-    publishQuiet: true,
     worldParameters: {
       headless: false,
       slowMo: 100 // Add slight delay for better visibility
@@ -37,14 +37,15 @@ module.exports = {
   },
   // Configuration for dry run - verifies steps without executing them
   dryrun: {
+    paths: ['src/features/**/*.feature'],
     requireModule: ['ts-node/register'],
     require: ['src/step-definitions/**/*.js'],
     format: ['progress-bar'],
-    dryRun: true,
-    publishQuiet: true
+    dryRun: true
   },
   // Configuration to rerun failed tests
   rerun: {
+    paths: ['src/features/**/*.feature'],
     requireModule: ['ts-node/register'],
     require: ['src/step-definitions/**/*.js'],
     format: [
@@ -53,7 +54,6 @@ module.exports = {
       'json:src/reports/cucumber-report.json',
       'rerun:@rerun.txt'
     ],
-    parallel: parseInt(PARALLEL),
-    publishQuiet: true
+    parallel: parseInt(PARALLEL)
   }
 };

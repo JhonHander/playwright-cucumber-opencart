@@ -31,10 +31,12 @@ When('I continue with the default delivery method', async function() {
   await checkoutPage.continueWithDeliveryMethod();
 });
 
+/* // Comentado para resolver ambigüedad
 When('I agree to the terms and conditions', async function() {
   const checkoutPage = this.pageFactory.getCheckoutPage();
   await checkoutPage.agreeToTerms();
 });
+*/
 
 When('I continue to the payment method', async function() {
   const checkoutPage = this.pageFactory.getCheckoutPage();

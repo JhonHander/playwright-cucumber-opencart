@@ -122,11 +122,33 @@ class SearchResultPage extends BasePage {
    * @param {number} index 
    */
   async addProductToCartByIndex(index) {
+    // Esperar a que los resultados de la búsqueda (o el mensaje de no resultados) aparezcan
+    await this.page.waitForSelector(`${this.productCards}, ${this.noResultsMessage}`);
+
+    // Verificar si hay un mensaje de "no hay productos"
+    if (await this.hasNoResults()) {
+      throw new Error(`Cannot add product to cart: No products found for the search criteria.`);
+    }
+
+    // Esperar específicamente por los botones de añadir al carrito
+    try {
+      await this.page.waitForFunction(
+        (selector, idx) => document.querySelectorAll(selector).length > idx,
+        { selector: this.addToCartButtons, idx: index },
+        { timeout: 7000 } // Aumentar un poco el timeout por si acaso
+      );
+    } catch (e) {
+      const currentButtons = await this.page.$$(this.addToCartButtons);
+      throw new Error(`Product index ${index} is out of range. Found only ${currentButtons.length} add-to-cart buttons after waiting.`);
+    }
+    
     const buttons = await this.page.$$(this.addToCartButtons);
     if (index < buttons.length) {
       await buttons[index].click();
+      // Considera añadir una espera para un mensaje de éxito o para que el contador del carrito se actualice
+      await this.page.waitForTimeout(1000); // Pequeña espera después de hacer clic
     } else {
-      throw new Error(`Product index ${index} is out of range`);
+      throw new Error(`Product index ${index} is out of range even after explicit wait. Found ${buttons.length} buttons.`);
     }
   }
 

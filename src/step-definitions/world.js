@@ -1,4 +1,4 @@
-const { setWorldConstructor } = require('@playwright/test');
+const { setWorldConstructor, World } = require('@cucumber/cucumber');
 const { chromium, firefox, webkit } = require('@playwright/test');
 const PageFactory = require('../pages/PageFactory');
 const Config = require('../support/config');
@@ -13,8 +13,9 @@ const TagHelper = require('../support/helpers/tag-helper');
  * Manages browser, context and page instances
  * Also creates and manages page objects
  */
-class CustomWorld {
-  constructor() {
+class CustomWorld extends World {
+  constructor(options) {
+    super(options);
     this.browser = null;
     this.context = null;
     this.page = null;
@@ -26,13 +27,12 @@ class CustomWorld {
     this.globalTestData = testData; // Access to test data
     this.constants = Constants; // Access to constants
     this.dataHelper = DataHelper; // Access to data helper
-    this.tagHelper = TagHelper; // Access to tag helper    this.pageErrors = [];
-    this.testData = {}; // Store test data to share between steps
-    this.config = Config; // Access to config
-    this.globalTestData = testData; // Access to test data
-    this.constants = Constants; // Access to constants
-    this.dataHelper = DataHelper; // Access to data helper
     this.tagHelper = TagHelper; // Access to tag helper
+    // Assign parameters if they exist, otherwise use defaults from config
+    this.parameters = options.parameters || {};
+    // Initialize headless and slowMo from worldParameters (passed via cucumber.js) or config
+    this.headless = this.parameters.headless !== undefined ? this.parameters.headless : this.config.getBrowserOptions().headless;
+    this.slowMo = this.parameters.slowMo !== undefined ? this.parameters.slowMo : this.config.getBrowserOptions().slowMo;
   }
 
   /**
@@ -41,18 +41,19 @@ class CustomWorld {
   async setUp() {
     // Get browser configuration
     const browserType = this.config.getBrowser();
-    const options = this.config.getBrowserOptions();
+    // Use this.headless and this.slowMo which already consider worldParameters
+    const launchOptions = { headless: this.headless, slowMo: this.slowMo }; 
     
     // Launch browser based on configuration
     switch(browserType.toLowerCase()) {
       case 'firefox':
-        this.browser = await firefox.launch({ headless: options.headless, slowMo: options.slowMo });
+        this.browser = await firefox.launch(launchOptions);
         break;
       case 'webkit':
-        this.browser = await webkit.launch({ headless: options.headless, slowMo: options.slowMo });
+        this.browser = await webkit.launch(launchOptions);
         break;
       default:
-        this.browser = await chromium.launch({ headless: options.headless, slowMo: options.slowMo });
+        this.browser = await chromium.launch(launchOptions);
     }
       this.context = await this.browser.newContext({
       viewport: { width: 1280, height: 720 },

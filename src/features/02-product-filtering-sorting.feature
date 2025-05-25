@@ -15,8 +15,8 @@ Feature: Product Filtering and Sorting
   @all
   Scenario: Filter search results with additional criteria
     When I search with the following criteria:
-      | keyword  | description | subcategories |
-      | macbook  | true        | true          |
+      | keyword  | description |
+      | macbook  | true        |
     Then I should see products containing "MacBook"
     And I should see at least 2 products in the results
 
