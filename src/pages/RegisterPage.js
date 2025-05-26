@@ -24,7 +24,7 @@ class RegisterPage extends BasePage {
     this.telephoneError = '#input-telephone + .text-danger';
     this.passwordError = '#input-password + .text-danger';
     this.confirmPasswordError = '#input-confirm + .text-danger';
-    this.successMessage = '#content > p:first-child';
+    this.successMessage = '#content p:nth-of-type(1)';
   }
 
   /**
@@ -66,6 +66,12 @@ class RegisterPage extends BasePage {
    */
   async submitRegistration() {
     await this.click(this.continueButton);
+    // Esperar explícitamente la navegación a la página de éxito
+    try {
+      await this.page.waitForURL('**/index.php?route=account/success', { timeout: 15000, waitUntil: 'load' });
+    } catch (e) {
+      console.error(`Error esperando la URL de éxito del registro: ${e.message}. URL actual: ${this.page.url()}`);
+    }
   }
 
   /**
@@ -73,13 +79,64 @@ class RegisterPage extends BasePage {
    * @returns {Promise<boolean>}
    */
   async isRegistrationSuccessful() {
+    const successParagraphSelector = this.successMessage;
+    const expectedTextStart = 'congratulations! your new account has been successfully created!';
+    const contentSelector = '#content';
+
     try {
-      await this.waitForElement(this.successMessage, 15000);
-      const message = await this.getText(this.successMessage);
-      console.log(`Registration success page message: "${message}"`);
-      return message.toLowerCase().startsWith('congratulations! your new account has been successfully created!');
+      // Asegurarse de que estamos en la página de éxito. Esto también está en submitRegistration, pero es una doble verificación.
+      // Usar 'load' ya que 'networkidle' puede ser inestable.
+      await this.page.waitForURL('**/index.php?route=account/success', { timeout: 15000, waitUntil: 'load' });
+      console.log(`La URL actual es la página de éxito: ${this.page.url()}`);
+
+      // Obtener directamente el contenido de texto. Las acciones del localizador de Playwright esperan automáticamente.
+      // El timeout aquí se aplica a la acción del localizador en sí (esperar el elemento y obtener el texto).
+      const message = await this.page.locator(successParagraphSelector).textContent({ timeout: 15000 });
+      
+      if (message === null) {
+        console.error(`El párrafo de éxito "${successParagraphSelector}" fue encontrado por el localizador, pero su textContent es null.`);
+        try {
+            const contentHtml = await this.page.locator(contentSelector).innerHTML({ timeout: 2000 });
+            console.error(`HTML de ${contentSelector} cuando el mensaje es null: ${contentHtml.substring(0, 500)}...`);
+        } catch (diagError) {
+            console.error(`Error de diagnóstico al obtener HTML de ${contentSelector}: ${diagError.message}`);
+        }
+        return false;
+      }
+
+      console.log(`Contenido de texto de "${successParagraphSelector}": "${message.trim()}"`);
+      const isSuccess = message.trim().toLowerCase().startsWith(expectedTextStart);
+      if (!isSuccess) {
+          console.warn(`El contenido del mensaje "${message.trim()}" no coincide con el inicio esperado "${expectedTextStart}"`);
+      }
+      return isSuccess;
+
     } catch (error) {
-      console.error(`Error in isRegistrationSuccessful: ${error.message}. Current URL: ${this.page.url()}`);
+      console.error(`Error en isRegistrationSuccessful: ${error.message}. URL actual: ${this.page.url()}`);
+      try {
+        const isContentVisible = await this.page.locator(contentSelector).isVisible({timeout: 1000});
+        console.error(`¿Está "${contentSelector}" visible durante el error? ${isContentVisible}`);
+        if(isContentVisible) {
+          const contentHtml = await this.page.locator(contentSelector).innerHTML({ timeout: 2000 });
+          console.error(`HTML de ${contentSelector} durante el error: ${contentHtml.substring(0, 1000)}...`);
+        } else {
+            console.error(`"${contentSelector}" no estaba visible durante el error.`);
+        }
+        
+        const successLocator = this.page.locator(successParagraphSelector);
+        const count = await successLocator.count();
+        console.error(`Cantidad de elementos "${successParagraphSelector}": ${count}`);
+        if (count > 0) {
+            const isVisibleByLocator = await successLocator.isVisible({timeout:1000});
+            console.error(`¿Está "${successParagraphSelector}" visible (locator.isVisible())? ${isVisibleByLocator}`);
+            const innerHtml = await successLocator.innerHTML({timeout:1000}); // Usar innerHTML para ver la etiqueta en sí
+            console.error(`InnerHTML de "${successParagraphSelector}": ${innerHtml}`);
+            const textContentFromCatch = await successLocator.textContent({timeout:1000});
+            console.error(`TextContent de "${successParagraphSelector}" en catch: ${textContentFromCatch}`);
+        }
+      } catch (diagError) {
+        console.error(`Error de diagnóstico en el bloque catch de isRegistrationSuccessful: ${diagError.message}`);
+      }
       return false;
     }
   }

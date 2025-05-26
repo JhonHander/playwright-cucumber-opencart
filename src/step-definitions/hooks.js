@@ -1,8 +1,10 @@
-const { Before, After, BeforeAll, AfterAll, Status } = require('@cucumber/cucumber');
+const { Before, After, BeforeAll, AfterAll, Status, setDefaultTimeout } = require('@cucumber/cucumber');
 const fs = require('fs');
 const path = require('path');
 const Config = require('../support/config');
 const FileHelper = require('../support/helpers/file-helper');
+
+setDefaultTimeout(30 * 1000); // 30 segundos de timeout para todos los pasos
 
 // Create necessary directories
 BeforeAll(async function() {

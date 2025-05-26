@@ -3,10 +3,22 @@ const { expect } = require('@playwright/test');
 
 When('I add the first product to the cart', async function() {
   const searchResultPage = this.pageFactory.getSearchResultPage();
+  
+  // Obtener el nombre del primer producto antes de añadirlo
+  const productNames = await searchResultPage.getProductNames();
+  if (productNames.length > 0) {
+    this.testData.lastAddedProductName = productNames[0];
+    console.log(`Guardando nombre del producto a añadir: ${productNames[0]}`);
+  } else {
+    // Esto no debería suceder si el paso "Then I should see search results" pasó
+    throw new Error("No products found on search result page to get a name from.");
+  }
+  
   await searchResultPage.addProductToCartByIndex(0);
   
-  // Wait for the success message to appear
-  await this.page.waitForTimeout(1000);
+  // Esperar a que aparezca el mensaje de éxito o que el carrito se actualice
+  // Reemplazar waitForTimeout con una espera más explícita si es posible
+  await this.page.waitForTimeout(1500); // Aumentado ligeramente por si acaso
 });
 
 Then('I should see a success message', async function() {

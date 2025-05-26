@@ -22,12 +22,14 @@ Then('I should see the updated cart total', async function() {
   console.log(`Updated cart total: ${cartTotal}`);
 });
 
+/* Commenting out to resolve ambiguity with product-interaction-steps.js
 Then('I should see {int} products in my cart', async function(expectedCount) {
   const cartPage = this.pageFactory.getCartPage();
-  const actualCount = await cartPage.getProductCount();
+  const actualCount = await cartPage.getProductCount(); // Incorrect method, should be getItemCount()
   
   expect(actualCount).toBe(expectedCount);
 });
+*/
 
 // Checkout as Guest
 When('I choose to checkout as guest', async function() {
@@ -79,41 +81,42 @@ When('I select a payment method', async function() {
   const checkoutPage = this.pageFactory.getCheckoutPage();
   await checkoutPage.selectDefaultPaymentMethod();
   await checkoutPage.agreeToTerms();
-  await checkoutPage.continueToStep6();
+  await checkoutPage.continueToPaymentMethod();
 });
 
 When('I confirm my billing details', async function() {
   const checkoutPage = this.pageFactory.getCheckoutPage();
-  
-  // If we have registered user data, use it
   if (this.testData.registrationDetails) {
-    await checkoutPage.confirmExistingBillingDetails();
+    // Para usuario registrado, usa la dirección guardada y continúa.
+    await checkoutPage.useSavedAddress(); 
   } else {
-    // Generate random address
+    // Lógica de invitado (ya estaba definida y parece correcta para ese flujo)
     const addressDetails = this.dataHelper.generateRandomAddress();
     this.testData.address = addressDetails;
-    await checkoutPage.enterBillingAddress(addressDetails);
+    await checkoutPage.fillBillingDetails(addressDetails);
+    await checkoutPage.continueToDeliveryDetails(); 
   }
-  
-  await checkoutPage.continueToStep3();
+  // La continuación específica de la sección ya la manejan los métodos anteriores.
 });
 
 When('I confirm my delivery details', async function() {
   const checkoutPage = this.pageFactory.getCheckoutPage();
-  await checkoutPage.useExistingShippingAddress();
-  await checkoutPage.continueToStep4();
+  // Para un usuario registrado, después de confirmar la dirección de facturación,
+  // la dirección de envío suele estar preseleccionada si es la misma.
+  // Solo necesitamos hacer clic en el botón "Continue" de la sección de dirección de envío.
+  // El ID de este botón es #button-shipping-address
+  await checkoutPage.click('#button-shipping-address'); 
 });
 
 When('I confirm my delivery method', async function() {
   const checkoutPage = this.pageFactory.getCheckoutPage();
-  await checkoutPage.selectDefaultShippingMethod();
-  await checkoutPage.continueToStep5();
+  // Asumimos que el método de envío por defecto ya está seleccionado o no requiere interacción más que continuar.
+  await checkoutPage.continueWithDeliveryMethod(); // Usa #button-shipping-method
 });
 
 When('I agree to the terms and conditions', async function() {
   const checkoutPage = this.pageFactory.getCheckoutPage();
   await checkoutPage.agreeToTerms();
-  await checkoutPage.continueToStep6();
 });
 
 When('I confirm my order', async function() {

@@ -122,33 +122,39 @@ class SearchResultPage extends BasePage {
    * @param {number} index 
    */
   async addProductToCartByIndex(index) {
-    // Esperar a que los resultados de la búsqueda (o el mensaje de no resultados) aparezcan
-    await this.page.waitForSelector(`${this.productCards}, ${this.noResultsMessage}`);
+    const productCardsSelector = '.product-layout';
+    const noResultsMessageSelector = '#content p:not([class])';
+    const addToCartButtonsSelector = 'button[onclick*="cart.add"]';
 
-    // Verificar si hay un mensaje de "no hay productos"
-    if (await this.hasNoResults()) {
+    await this.page.waitForSelector(`${productCardsSelector}, ${noResultsMessageSelector}`);
+
+    let noResults = false;
+    if (await this.isVisible(noResultsMessageSelector)) {
+      const message = await this.getText(noResultsMessageSelector);
+      noResults = message.includes('no products');
+    }
+    if (noResults) {
       throw new Error(`Cannot add product to cart: No products found for the search criteria.`);
     }
 
-    // Esperar específicamente por los botones de añadir al carrito
+    // Esperar específicamente el botón en el índice dado
+    const specificButtonSelector = `${addToCartButtonsSelector} >> nth=${index}`;
     try {
-      await this.page.waitForFunction(
-        (selector, idx) => document.querySelectorAll(selector).length > idx,
-        { selector: this.addToCartButtons, idx: index },
-        { timeout: 7000 } // Aumentar un poco el timeout por si acaso
-      );
+      await this.page.waitForSelector(specificButtonSelector, { state: 'visible', timeout: 7000 });
     } catch (e) {
-      const currentButtons = await this.page.$$(this.addToCartButtons);
-      throw new Error(`Product index ${index} is out of range. Found only ${currentButtons.length} add-to-cart buttons after waiting.`);
+      const currentButtons = await this.page.$$(addToCartButtonsSelector);
+      throw new Error(`Product at index ${index} (selector: ${specificButtonSelector}) not visible after waiting. Found ${currentButtons.length} total add-to-cart buttons.`);
     }
     
-    const buttons = await this.page.$$(this.addToCartButtons);
-    if (index < buttons.length) {
-      await buttons[index].click();
-      // Considera añadir una espera para un mensaje de éxito o para que el contador del carrito se actualice
-      await this.page.waitForTimeout(1000); // Pequeña espera después de hacer clic
+    // Hacemos clic directamente en el botón específico que ya sabemos que está visible.
+    // No es estrictamente necesario volver a consultarlos todos con page.$$, pero lo mantenemos por si hay alguna lógica futura.
+    const buttons = await this.page.$$(addToCartButtonsSelector); 
+    if (index < buttons.length) { // Doble verificación, aunque waitForSelector debería haber fallado si no existe.
+      await this.page.locator(specificButtonSelector).click(); // Usar locator(...).click() es más directo aquí.
+      await this.page.waitForTimeout(1000); 
     } else {
-      throw new Error(`Product index ${index} is out of range even after explicit wait. Found ${buttons.length} buttons.`);
+      // Este caso debería ser muy raro si el waitForSelector anterior tuvo éxito.
+      throw new Error(`Product index ${index} is out of range after specific wait. Found ${buttons.length} buttons. Selector: ${addToCartButtonsSelector}`);
     }
   }
 
